@@ -3,13 +3,20 @@ import OtpModel from '../models/OtpSchema.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
+import cloudinary from 'cloudinary';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
+cloudinary.v2.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
 export const signupController = async (req, res) => {
     try {
-        const { username, email, password, description, avatar, socialLinks } = req.body;
+        const { username, email, password, description, socialLinks } = req.body;
 
         if (!username || !email || !password) {
             return res.json({
@@ -27,12 +34,21 @@ export const signupController = async (req, res) => {
             });
         }
 
+        // Upload avatar to Cloudinary
+        let avatarUrl = '';
+        if (req.file) {
+            const result = await cloudinary.v2.uploader.upload(req.file.path, {
+                resource_type: "image"
+            });
+            avatarUrl = result.secure_url;
+        }
+
         const newCreator = new CreatorModel({
             username,
             email,
             password, // Directly use the plain password, it will be hashed in the pre-save hook
             description,
-            avatar,
+            avatar: avatarUrl,
             socialLinks
         });
 
