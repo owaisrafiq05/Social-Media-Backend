@@ -131,7 +131,7 @@ export const deletePost = async (req, res) => {
             return res.status(404).json({ message: 'Post not found' });
         }
 
-        await post.remove();
+        await PostModel.findByIdAndDelete(req.params.id);
         res.json({ message: 'Post removed' });
     } catch (err) {
         res.status(500).json({ message: 'Server error', error: err.message });
